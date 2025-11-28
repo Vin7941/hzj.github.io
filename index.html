@@ -1,1 +1,26 @@
-<h1>HZJ工具</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HZJ工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>HZJ工具</h1>
+        <div class="input-group">
+            <label for="mobileInput">请输入手机号码</label>
+            <input type="text" id="mobileInput" placeholder="请输入11位手机号码">
+        </div>
+        <button id="executeBtn">执行</button>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px;">处理中，请稍候...</p>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
