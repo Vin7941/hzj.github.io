@@ -10,10 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
         'https://Crossorigin.me/',
         'https://api.codetabs.com/v1/proxy?quest=',
         'https://cors-proxy.htmldriven.com/?url='
-        'https://cors-anywhere.herokuapp.com/',
-        'https://api.codetabs.com/v1/proxy?quest=',
-        'https://corsproxy.io/?',
-        'https://proxy.cors.sh/'
     ];
 
     let currentProxyIndex = 0;
