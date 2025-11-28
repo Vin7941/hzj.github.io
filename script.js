@@ -28,8 +28,14 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: 'slideDistance=504&slideWidth=549'
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Token响应:', data);
             // 验证token获取是否成功
             if (data.code === 1 && data.msg === '验证Token生成成功') {
                 // 第二步：提交订单
@@ -41,19 +47,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: `mobile=${mobileValue}&time=20&verify_token=${data.token}`
                 });
             } else {
-                throw new Error('获取token失败');
+                throw new Error('获取token失败: ' + (data.msg || '未知错误'));
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('订单响应:', data);
             // 显示最终结果
             showResult(data.msg || '操作完成', 'success');
         })
         .catch(error => {
             console.error('Error:', error);
-            const errorMessage = error.message === '获取token失败' 
-                ? '获取token失败，请检查稍后再试！' 
-                : '请求失败，请检查网络连接！';
+            let errorMessage = '请求失败，请检查网络连接！';
+            
+            if (error.message.includes('token')) {
+                errorMessage = error.message;
+            } else if (error.message.includes('Failed to fetch') || error.message.includes('Network request failed')) {
+                errorMessage = '网络请求被阻止，请参考页面说明解决问题';
+            }
+            
             showResult(errorMessage, 'error');
         })
         .finally(() => {
@@ -69,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return fetch(url, {
             ...options,
-            credentials: 'include',
+            credentials: 'omit', // 修改为 omit，因为我们在header中手动设置了Cookie
             headers: {
                 ...options.headers,
                 'Cookie': cookies
