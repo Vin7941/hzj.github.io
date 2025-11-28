@@ -1,205 +1,232 @@
 <html lang="zh">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HZJ</title>
+    <title>工具</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            /* Align content to the top to allow scrolling */
+            justify-content: center;
             min-height: 100vh;
-            /* Ensure the body covers the entire viewport */
             margin: 0;
             background-color: #f7f7f7;
             text-align: center;
-            /* Ensure text inside the body is centered */
-            overflow-y: auto;
-            /* Allow vertical scrolling */
-            padding-top: 100px;
-            /* Add some space at the top */
-            width: 100%;
-            height: auto;
-            /* Ensure the height of the body adjusts based on content */
         }
 
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* Center everything inside the container */
-            justify-content: flex-start;
-            /* Align content to the top */
-            width: 100%;
-            flex-grow: 1;
-            /* Allow the container to fill the remaining height */
-        }
-
-        .logo-container {
-            text-align: center;
-            /* Center the logo horizontally */
-            margin-bottom: 20px;
-            /* Add some space below the logo */
-        }
-
-        .logo {
-            width: 120px;
-            /* Adjust the width of the logo */
-            height: auto;
-            /* Maintain aspect ratio */
-        }
-
-        input[type="text"],
-        input[type="number"],
-        #generatedUrl {
-            width: 325px;
-            /* Make the input fields wider */
-            padding: 15px;
+        input[type="text"], input[type="number"] {
+            width: 300px;
+            padding: 12px;
             font-size: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             border: 2px solid #ddd;
             border-radius: 5px;
             box-sizing: border-box;
         }
 
         button {
-            padding: 10px 20px;
-            font-size: 18px;
+            padding: 12px 30px;
+            font-size: 16px;
             color: white;
             background-color: #007bff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
-            margin-top: 10px;
-            /* Add margin on top for spacing */
         }
 
         button:hover {
             background-color: #0056b3;
         }
 
-        #instruction {
-            font-size: 14px;
-            color: #333;
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
             margin-top: 20px;
         }
 
-        /* New card layout for tutorial */
-        .card {
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            width: 80%;
-            /* Adjust the width of the card */
-            padding: 20px;
-            box-sizing: border-box;
-            margin-top: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            height: auto;
-            /* Ensure card height is based on content */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
 
-        .card h3 {
-            font-weight: bold;
-            font-size: 20px;
-            color: #333;
-        }
-
-        .card p {
-            font-size: 14px;
-            color: #555;
-            margin-top: 10px;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-
 <body>
+    <input type="text" id="phoneNumber" placeholder="请输入手机号码" required>
+    <br>
+    <input type="number" id="times" min="1" placeholder="请输入次数" required>
+    <br>
+    <button id="startButton" onclick="sendRequests()">开始</button>
 
-
-
-    <form id="postForm">
-        <label for="phoneNumber"></label>
-        <input type="text" id="phoneNumber" name="phoneNumber" placeholder="输入号码" required=""><br>
-
-        <button type="button" onclick="sendRequests()">执行</button>
-    </form>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>处理中，请稍候...</p>
+    </div>
 
     <script>
-        const apirunRequests = {
-            url: 'https://hl-6-6.5521.site/hl-hl/ajax/order/act/add',
-            method: 'POST_FORM',
-            headers: () => ({
-            }),
-            data: (phoneNumber, token) => ({
-                'mobile': phoneNumber,
-                'time': '20',
-                'verify_token': token
-            })
-        };
-
-        const apitokenRequests = {
-            url: 'https://hl-6-6.5521.site/hl-hl/ajax/verify/act/generate',
-            method: 'POST_FORM',
-            headers: () => ({
-
-            }),
-            data: () => ({
-                'slideDistance': '504',
-                'slideWidth': '549'
-            })
-        };
-
-
-        // 发送POST请求的函数
-        function sendRequests() {
-            // 获取输入值
+        async function sendRequests() {
             const phoneNumber = document.getElementById('phoneNumber').value;
+            const times = parseInt(document.getElementById('times').value, 10);
+            const startButton = document.getElementById('startButton');
+            const loadingDiv = document.getElementById('loading');
 
             if (!phoneNumber || !/^[1][3-9][0-9]{9}$/.test(phoneNumber)) {
                 alert("请输入正确的11位手机号！");
                 return;
             }
 
-                        const formData = new URLSearchParams();
-                        for (const key in requestData) {
-                            if (requestData.hasOwnProperty(key)) {
-                                formData.append(key, requestData[key]);
-                            }
-                        }
+            if (!times || isNaN(times) || times <= 0) {
+                alert("请输入正确的次数！");
+                return;
+            }
 
-                        requestPromise = fetch(apitokenRequest.url, {
-                            method: 'POST',
-                            headers: {
-                'Host': 'hl-6-6.5521.site',
-                'Content-Length': '32',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0',
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': '*/*',
-                'Referer': 'https://hl-6-6.5521.site/hl-hl/ajax/verify/act/generate',
-                'Accept-Language': 'zh-cn',
-                'Cache-Control': 'no-cache',
-                'Cookie': 'PHPSESSID=1cd4bcf0e4f37f311cd61fd2b9b41df0; server_name_session=3342d47cd4f6eec4f75e965786ef505a; Let_IndexUsername=hongzha9; Let_IndexPassword=5d2a29e4522956ea3273b338f0784100'
-                            },
-                            body: formData.toString()
-                        }).then(response => {
-                            if (response.ok) {
-                                alert(response.data);
-                            } else {
+            let successCount = 0;
+            let failureCount = 0;
 
-                            }
-                        }).catch(error => {
-                            console.error(`POST_FORM 请求失败: ${apiRequest.url}`, error);
-                        })
+            startButton.disabled = true;
+            loadingDiv.style.display = 'block';
 
+            const requestPromises = [];
+
+            for (let i = 0; i < times; i++) {
+                const requestPromise = executeSingleRequest(phoneNumber);
+                requestPromises.push(requestPromise);
+            }
+
+            try {
+                const results = await Promise.allSettled(requestPromises);
+                
+                results.forEach(result => {
+                    if (result.status === 'fulfilled' && result.value === true) {
+                        successCount++;
+                    } else {
+                        failureCount++;
+                    }
+                });
+
+                alert(`完成！\n成功：${successCount} 次\n失败：${failureCount} 次`);
+            } catch (error) {
+                alert('处理错误: ' + error.message);
+            } finally {
+                startButton.disabled = false;
+                loadingDiv.style.display = 'none';
+            }
         }
+
+        async function executeSingleRequest(phoneNumber) {
+            try {
+                // 第一步：获取token
+                const tokenResponse = await fetch('https://hl-6-6.5521.site/hl-hl/ajax/verify/act/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'slideDistance=504&slideWidth=549',
+                    credentials: 'include'
+                });
+
+                if (!tokenResponse.ok) {
+                    throw new Error(`HTTP ${tokenResponse.status}`);
+                }
+
+                const tokenData = await tokenResponse.json();
+                
+                if (tokenData.code !== 1) {
+                    throw new Error(tokenData.msg || '未知错误');
+                }
+
+                // 第二步：提交订单
+                const orderResponse = await fetch('https://hl-6-6.5521.site/hl-hl/ajax/order/act/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `mobile=${phoneNumber}&time=20&verify_token=${tokenData.token}`,
+                    credentials: 'include'
+                });
+
+                if (!orderResponse.ok) {
+                    throw new Error(`HTTP ${orderResponse.status}`);
+                }
+
+                const orderData = await orderResponse.json();
+                
+                if (orderData.code === 1) {
+                    return true;
+                } else {
+                    throw new Error(orderData.msg || '未知错误');
+                }
+
+            } catch (error) {
+                console.error('请求失败:', error.message);
+                return false;
+            }
+        }
+
+        // 设置cookie的函数
+        function setCookies() {
+            const cookies = [
+                {
+                    name: 'PHPSESSID',
+                    value: '1cd4bcf0e4f37f311cd61fd2b9b41df0',
+                    domain: '.hl-6-6.5521.site'
+                },
+                {
+                    name: 'server_name_session',
+                    value: '3342d47cd4f6eec4f75e965786ef505a',
+                    domain: '.hl-6-6.5521.site'
+                },
+                {
+                    name: 'Let_IndexUsername',
+                    value: 'hongzha9',
+                    domain: '.hl-6-6.5521.site'
+                },
+                {
+                    name: 'Let_IndexPassword',
+                    value: '5d2a29e4522956ea3273b338f0784100',
+                    domain: '.hl-6-6.5521.site'
+                }
+            ];
+
+            cookies.forEach(cookie => {
+                // 设置cookie，包含 SameSite=None 和 Secure
+                document.cookie = `${cookie.name}=${cookie.value}; domain=${cookie.domain}; path=/; SameSite=None; Secure`;
+            });
+            
+            console.log('Cookie已设置（SameSite=None; Secure）');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setCookies();
+        });
+
+        document.getElementById('phoneNumber').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                document.getElementById('times').focus();
+            }
+        });
+
+        document.getElementById('times').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendRequests();
+            }
+        });
     </script>
-
 </body>
-
 </html>
