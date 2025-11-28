@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // CORS代理服务器（选择一个可用的）
     const PROXY_SERVERS = [
+        'https://CorsProxy.io/',
+        'https://Crossorigin.me/',
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://cors-proxy.htmldriven.com/?url='
         'https://cors-anywhere.herokuapp.com/',
         'https://api.codetabs.com/v1/proxy?quest=',
         'https://corsproxy.io/?',
